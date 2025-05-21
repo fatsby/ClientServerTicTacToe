@@ -89,4 +89,9 @@ public class ClientHandler extends Thread {
             playerQueue.removePlayerFromQueue(this);
         }
     }
+
+    public void close() throws IOException {
+        exit = true;
+        clientSocket.close();
+    }
 }

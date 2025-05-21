@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.HashMap;
 
 public class GameSession{
@@ -9,6 +10,8 @@ public class GameSession{
     private QueueManager playerQueue;
     private StringBuilder sb;
     private boolean abnormalEnd;
+    private CustomTimer timer;
+    private final int TIMER_SECONDS = 10; //set timer seconds here
 
     public GameSession(ClientHandler player1, ClientHandler player2) {
         this.player1 = player1;
@@ -29,16 +32,19 @@ public class GameSession{
 
     public void startGame() {
         notifyPlayersGameStarted();
+        setTimer(this, TIMER_SECONDS);
     }
 
 
     private void cleanUpAndRequeue() {
+        if (timer != null) timer.stop();
         player1.setGame(null, ' ');
         player2.setGame(null, ' ');
 
         returnPlayersToQueue();
     }
 
+    //main game logic
     public void handleMove(ClientHandler requestedPlayer, String input) {
         if (requestedPlayer != currentTurn || gameOver) {
             requestedPlayer.sendMessage("Not your turn or game is over");
@@ -54,6 +60,7 @@ public class GameSession{
                 broadcastBoard();
                 updateGameState();
                 switchTurn();
+                setTimer(this, TIMER_SECONDS); //time-out timer
             } else {
                 requestedPlayer.sendMessage("Invalid move");
             }
@@ -149,4 +156,16 @@ public class GameSession{
         return gameOver;
     }
 
+    //setTimer runs every time switchTurn() is called, and runs once on a new game
+    //every time it runs, it stops the old timer and start a new one
+    public void setTimer(GameSession game, int seconds){
+        if (timer != null) timer.stop(); // stops the old timer before starting new one
+        this.timer = new CustomTimer(game, seconds);
+        timer.start();
+    }
+
+    public void playerTimedOut() throws IOException {
+        currentTurn.sendMessage("10s exceeded, you are timed out, closing connection");
+        currentTurn.close(); // disconnect the current player
+    }
 }
