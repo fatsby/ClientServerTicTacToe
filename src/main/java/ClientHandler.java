@@ -43,9 +43,6 @@ public class ClientHandler extends Thread {
     public void processInput(String input) {
         try {
             if (input.equalsIgnoreCase("exit")) {
-                if (currentGame != null) {
-                    currentGame.playerExit(this);
-                }
                 clientSocket.close();
                 exit = true;
                 return;
@@ -64,10 +61,11 @@ public class ClientHandler extends Thread {
     }
 
     private void cleanup() {
-        //extra safety barrier, probably useless and unnecessary
         try {
             if (currentGame != null) {
-                currentGame.playerExit(this);
+                handleExit();
+            } else if (playerQueue.hasPlayer(this)) {
+                playerQueue.removePlayerFromQueue(this);
             }
 
             if (in != null) in.close();
@@ -80,7 +78,15 @@ public class ClientHandler extends Thread {
         }
     }
 
+
     public Character getSymbol() {
         return symbol;
+    }
+
+    private void handleExit(){
+        currentGame.playerExit(this);
+        if (playerQueue.hasPlayer(this)){
+            playerQueue.removePlayerFromQueue(this);
+        }
     }
 }

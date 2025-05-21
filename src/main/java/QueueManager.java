@@ -19,7 +19,11 @@ public class QueueManager {
 
     public synchronized void addPlayer(ClientHandler player) {
         queue.add(player);
+
         matchPlayers();
+
+//        System.out.println("Added player to queue"); // for debugging
+//        System.out.println(queue);
     }
 
     private void matchPlayers() {
@@ -31,5 +35,17 @@ public class QueueManager {
             gameThread.start();
             System.out.println("New game started");
         }
+    }
+
+    public void removePlayerFromQueue(ClientHandler player) {
+        queue.remove(player);
+    }
+
+    public boolean hasPlayer(ClientHandler player) {
+        return queue.contains(player);
+    }
+
+    public Queue<ClientHandler> getQueue() {
+        return queue;
     }
 }

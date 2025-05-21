@@ -142,14 +142,25 @@ public class GameSession implements Runnable{
     }
 
     public void playerExit(ClientHandler exitedPlayer) {
+        if (gameOver) return;
+
         gameOver = true;
         abnormalEnd = true;
-        ClientHandler remainingPlayer = (player1 == exitedPlayer ? player2 : player1);
-        player1 = null;
-        player2 = null; //cleanup
-        remainingPlayer.sendMessage("The other player exited, queueing for new game");
 
-        remainingPlayer.setGame(null, ' ');
-        playerQueue.addPlayer(remainingPlayer);
+        ClientHandler remainingPlayer = (player1 == exitedPlayer ? player2 : player1);
+
+        if (remainingPlayer != null) {
+            remainingPlayer.sendMessage("The other player exited, queueing for new game");
+            remainingPlayer.setGame(null, ' ');
+            playerQueue.addPlayer(remainingPlayer);
+        }
+
+        player1 = null;
+        player2 = null; // cleanup
     }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
 }
