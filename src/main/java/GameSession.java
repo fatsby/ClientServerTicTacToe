@@ -1,6 +1,6 @@
 import java.util.HashMap;
 
-public class GameSession implements Runnable{
+public class GameSession{
     private ClientHandler player1;
     private ClientHandler player2;
     private ClientHandler currentTurn;
@@ -27,27 +27,10 @@ public class GameSession implements Runnable{
         currentTurn = player1;
     }
 
-    @Override
-    public void run() {
+    public void startGame() {
         notifyPlayersGameStarted();
-
-        while (!gameOver) {
-            try {
-                Thread.sleep(100); // apparently this avoid 100% thread cpu usage and better than doign nothing
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.out.println("Game session interrupted: " + e.getMessage());
-                break;
-            }
-        }
-
-        System.out.println("A game just ended"); // for debugging purposes
-
-        if (!abnormalEnd) {
-            cleanUpAndRequeue();
-        }
-        //game ends, return players to queue, close thread
     }
+
 
     private void cleanUpAndRequeue() {
         player1.setGame(null, ' ');
@@ -122,16 +105,19 @@ public class GameSession implements Runnable{
         if (board.checkWin()) {
             gameOver = true;
 
-            System.out.println(gameOver);
-            System.out.println("Game over reached in updateGamestate"); // for debugging
-
             player1.sendMessage(currentTurn == player1 ? "You won!" : "You lost!");
             player2.sendMessage(currentTurn == player2 ? "You won!" : "You lost!");
+
+            if (!abnormalEnd) {
+                cleanUpAndRequeue();
+            }
         } else if (board.isBoardFull()) {
             gameOver = true;
-            System.out.println("Game over reached in updateGamestate"); // for debugging
-
             broadcastMessage("Game ended in a Draw!");
+
+            if (!abnormalEnd) {
+                cleanUpAndRequeue();
+            }
         }
     }
 
