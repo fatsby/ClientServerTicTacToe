@@ -16,7 +16,7 @@ public class CustomTimer {
     public void start() {
         future = scheduler.schedule(() -> {
             try {
-                game.playerTimedOut();
+                game.playerTimedOut(this);
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }

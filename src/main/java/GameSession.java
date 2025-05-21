@@ -159,13 +159,15 @@ public class GameSession{
     //setTimer runs every time switchTurn() is called, and runs once on a new game
     //every time it runs, it stops the old timer and start a new one
     public void setTimer(GameSession game, int seconds){
-        if (timer != null) timer.stop(); // stops the old timer before starting new one
+//        if (timer != null) timer.stop(); // stops the old timer before starting new one
         this.timer = new CustomTimer(game, seconds);
         timer.start();
     }
 
-    public void playerTimedOut() throws IOException {
-        currentTurn.sendMessage("10s exceeded, you are timed out, closing connection");
-        currentTurn.close(); // disconnect the current player
+    public void playerTimedOut(CustomTimer requestedTimer) throws IOException {
+        if (requestedTimer == timer){
+            currentTurn.sendMessage("10s exceeded, you are timed out, closing connection");
+            currentTurn.close(); // disconnect the current player
+        }
     }
 }
