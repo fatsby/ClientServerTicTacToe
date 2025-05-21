@@ -1,6 +1,7 @@
+import java.io.IOException;
 import java.util.HashMap;
 
-public class GameSession implements Runnable{
+public class GameSession{
     private ClientHandler player1;
     private ClientHandler player2;
     private ClientHandler currentTurn;
@@ -9,6 +10,8 @@ public class GameSession implements Runnable{
     private QueueManager playerQueue;
     private StringBuilder sb;
     private boolean abnormalEnd;
+    private CustomTimer timer;
+    private final int TIMER_SECONDS = 10; //set timer seconds here
 
     public GameSession(ClientHandler player1, ClientHandler player2) {
         this.player1 = player1;
@@ -27,35 +30,21 @@ public class GameSession implements Runnable{
         currentTurn = player1;
     }
 
-    @Override
-    public void run() {
+    public void startGame() {
         notifyPlayersGameStarted();
-
-        while (!gameOver) {
-            try {
-                Thread.sleep(100); // apparently this avoid 100% thread cpu usage and better than doign nothing
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.out.println("Game session interrupted: " + e.getMessage());
-                break;
-            }
-        }
-
-        System.out.println("A game just ended"); // for debugging purposes
-
-        if (!abnormalEnd) {
-            cleanUpAndRequeue();
-        }
-        //game ends, return players to queue, close thread
+        setTimer(this, TIMER_SECONDS);
     }
 
+
     private void cleanUpAndRequeue() {
+        if (timer != null) timer.stop();
         player1.setGame(null, ' ');
         player2.setGame(null, ' ');
 
         returnPlayersToQueue();
     }
 
+    //main game logic
     public void handleMove(ClientHandler requestedPlayer, String input) {
         if (requestedPlayer != currentTurn || gameOver) {
             requestedPlayer.sendMessage("Not your turn or game is over");
@@ -71,6 +60,7 @@ public class GameSession implements Runnable{
                 broadcastBoard();
                 updateGameState();
                 switchTurn();
+                setTimer(this, TIMER_SECONDS); //time-out timer
             } else {
                 requestedPlayer.sendMessage("Invalid move");
             }
@@ -122,16 +112,19 @@ public class GameSession implements Runnable{
         if (board.checkWin()) {
             gameOver = true;
 
-            System.out.println(gameOver);
-            System.out.println("Game over reached in updateGamestate"); // for debugging
-
             player1.sendMessage(currentTurn == player1 ? "You won!" : "You lost!");
             player2.sendMessage(currentTurn == player2 ? "You won!" : "You lost!");
+
+            if (!abnormalEnd) {
+                cleanUpAndRequeue();
+            }
         } else if (board.isBoardFull()) {
             gameOver = true;
-            System.out.println("Game over reached in updateGamestate"); // for debugging
-
             broadcastMessage("Game ended in a Draw!");
+
+            if (!abnormalEnd) {
+                cleanUpAndRequeue();
+            }
         }
     }
 
@@ -163,4 +156,16 @@ public class GameSession implements Runnable{
         return gameOver;
     }
 
+    //setTimer runs every time switchTurn() is called, and runs once on a new game
+    //every time it runs, it stops the old timer and start a new one
+    public void setTimer(GameSession game, int seconds){
+        if (timer != null) timer.stop(); // stops the old timer before starting new one
+        this.timer = new CustomTimer(game, seconds);
+        timer.start();
+    }
+
+    public void playerTimedOut() throws IOException {
+        currentTurn.sendMessage("10s exceeded, you are timed out, closing connection");
+        currentTurn.close(); // disconnect the current player
+    }
 }
