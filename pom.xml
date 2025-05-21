@@ -29,7 +29,7 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <classifier>main1</classifier>
+                            <classifier>Client</classifier>
                             <archive>
                                 <manifest>
                                     <mainClass>Client</mainClass>
@@ -49,7 +49,7 @@
                             <classifier>Server</classifier>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.example.MainClass2</mainClass>
+                                    <mainClass>Server</mainClass>
                                 </manifest>
                             </archive>
                         </configuration>
