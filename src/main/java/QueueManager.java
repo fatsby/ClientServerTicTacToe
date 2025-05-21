@@ -31,8 +31,7 @@ public class QueueManager {
             ClientHandler player1 = queue.poll();
             ClientHandler player2 = queue.poll();
             GameSession gameSession = new GameSession(player1, player2);
-            Thread gameThread = new Thread(gameSession);
-            gameThread.start();
+            gameSession.startGame();
             System.out.println("New game started");
         }
     }
