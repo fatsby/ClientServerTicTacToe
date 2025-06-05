@@ -11,6 +11,7 @@ public class GameSession{
     private StringBuilder sb;
     private boolean abnormalEnd;
     private CustomTimer timer;
+    private ProtocolManager protocolManager;
     private final int TIMER_SECONDS = 10; //set timer seconds here
 
     public GameSession(ClientHandler player1, ClientHandler player2) {
@@ -18,6 +19,7 @@ public class GameSession{
         this.player2 = player2;
         this.board = new Board();
         this.playerQueue = QueueManager.getInstance();
+        this.protocolManager = ProtocolManager.getInstance();
         this.gameOver = false;
         this.abnormalEnd = false;
 
@@ -57,6 +59,9 @@ public class GameSession{
 
             if (board.isValidMove(move)) {
                 board.move(move, playerSymbol);
+
+                protocolManager.sendNewMove(player1, player2, move, playerSymbol); //FOR INTERFACE PLAYERS
+
                 broadcastBoard();
                 updateGameState();
                 switchTurn();
@@ -115,12 +120,15 @@ public class GameSession{
             player1.sendMessage(currentTurn == player1 ? "You won!" : "You lost!");
             player2.sendMessage(currentTurn == player2 ? "You won!" : "You lost!");
 
+            protocolManager.sendClearBoard(player1, player2);
+
             if (!abnormalEnd) {
                 cleanUpAndRequeue();
             }
         } else if (board.isBoardFull()) {
             gameOver = true;
             broadcastMessage("Game ended in a Draw!");
+            protocolManager.sendClearBoard(player1, player2);
 
             if (!abnormalEnd) {
                 cleanUpAndRequeue();
@@ -141,6 +149,7 @@ public class GameSession{
         abnormalEnd = true;
 
         ClientHandler remainingPlayer = (player1 == exitedPlayer ? player2 : player1);
+        protocolManager.sendClearBoard(remainingPlayer);
 
         if (remainingPlayer != null) {
             remainingPlayer.sendMessage("The other player exited, queueing for new game");
@@ -166,6 +175,7 @@ public class GameSession{
 
     public void playerTimedOut(CustomTimer requestedTimer) throws IOException {
         if (requestedTimer == timer){
+            protocolManager.sendExit(currentTurn);
             currentTurn.sendMessage("10s exceeded, you are timed out, closing connection");
             currentTurn.close(); // disconnect the current player
         }

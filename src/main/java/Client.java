@@ -61,10 +61,6 @@ public class Client {
         }
     }
 
-    private void close(){
-
-    }
-
     public static void main(String[] args) {
         Client client = new Client("localhost", 7010);
         client.start();
