@@ -21,8 +21,9 @@ public class ClientHandler extends Thread {
     @Override
     public void run() {
         try {
-            sendMessage("Welcome to TicTacToe! Waiting for opponent...");
-            playerQueue.addPlayer(this);
+            sendMessage("Welcome to TicTacToe!");
+            sendMessage("Type 'PvP' to play versus a Human.");
+            sendMessage("Type 'PvE' to play versus a Computer.");
 
             String inputLine;
             while ((inputLine = in.readLine()) != null && !exit) {
@@ -46,6 +47,20 @@ public class ClientHandler extends Thread {
                 clientSocket.close();
                 exit = true;
                 return;
+            }
+
+            if (currentGame == null){
+                switch (input.toLowerCase()){
+                    case "pve":
+                        sendMessage("Starting a game versus the Computer!");
+                        SinglePlayerGameSession pveGame = new SinglePlayerGameSession(this);
+                        pveGame.startGame();
+                        break;
+                    case "pvp":
+                        sendMessage("Queueing for a PvP game!");
+                        playerQueue.addPlayer(this);
+                        break;
+                }
             }
 
             if (currentGame != null) {

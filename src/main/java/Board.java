@@ -4,6 +4,7 @@ import java.util.Random;
 public class Board {
     private HashMap<Integer, Character> cells;
     private final int[][] winPatterns;
+    private Random rand = new Random();
 
     public Board() {
         this.cells = new HashMap<>();
@@ -21,6 +22,30 @@ public class Board {
                 {1, 5, 9},
                 {3, 5, 7}
         };
+    }
+
+    public int computerInput() {
+        int randomIndex = rand.nextInt(9) + 1;
+
+        // Search from random index to the left
+        for (int i = randomIndex; i >= 1; i--) {
+            if (cells.get(i) == '_') {
+                cells.replace(i, 'O');
+                System.out.println("Computer chose: " + i);
+                return i;
+            }
+        }
+
+        // If not found, search to the right
+        for (int i = randomIndex + 1; i <= 9; i++) {
+            if (cells.get(i) == '_') {
+                cells.replace(i, 'O');
+                System.out.println("Computer chose: " + i);
+                return i;
+            }
+        }
+
+        return -1; // No valid moves
     }
 
     public void move(int input, char playerSymbol){

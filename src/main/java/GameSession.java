@@ -21,11 +21,15 @@ public class GameSession{
         this.gameOver = false;
         this.abnormalEnd = false;
 
-        player1.setGame(this, 'X');
-        player1.sendMessage("You are X!");
+        if (player1 != null) {
+            player1.setGame(this, 'X');
+            player1.sendMessage("You are X!");
+        }
+        if (player2 != null) {
+            player2.setGame(this, 'O');
+            player2.sendMessage("You are O!");
+        }
 
-        player2.setGame(this, 'O');
-        player2.sendMessage("You are O!");
 
         currentTurn = player1;
     }
@@ -36,7 +40,7 @@ public class GameSession{
     }
 
 
-    private void cleanUpAndRequeue() {
+    protected void cleanUpAndRequeue() {
         if (timer != null) timer.stop();
         player1.setGame(null, ' ');
         player2.setGame(null, ' ');
@@ -86,12 +90,13 @@ public class GameSession{
         playerQueue.addPlayer(player2);
     }
 
-    private void broadcastMessage(String message) {
-        player1.sendMessage(message);
-        player2.sendMessage(message);
+    protected void broadcastMessage(String message) {
+        if (player1 != null) player1.sendMessage(message);
+        if (player2 != null) player2.sendMessage(message);
     }
 
-    private void broadcastBoard(){
+
+    protected void broadcastBoard(){
         HashMap<Integer, Character> cells = board.getCells();
 
         int count = 0;
@@ -108,12 +113,12 @@ public class GameSession{
         broadcastMessage(sb.toString());
     }
 
-    private void updateGameState() {
+    protected void updateGameState() {
         if (board.checkWin()) {
             gameOver = true;
 
-            player1.sendMessage(currentTurn == player1 ? "You won!" : "You lost!");
-            player2.sendMessage(currentTurn == player2 ? "You won!" : "You lost!");
+            if (player1 != null) player1.sendMessage(currentTurn == player1 ? "You won!" : "You lost!");
+            if (player2 != null) player2.sendMessage(currentTurn == player2 ? "You won!" : "You lost!");
 
             if (!abnormalEnd) {
                 cleanUpAndRequeue();
@@ -159,7 +164,6 @@ public class GameSession{
     //setTimer runs every time switchTurn() is called, and runs once on a new game
     //every time it runs, it stops the old timer and start a new one
     public void setTimer(GameSession game, int seconds){
-//        if (timer != null) timer.stop(); // stops the old timer before starting new one
         this.timer = new CustomTimer(game, seconds);
         timer.start();
     }
@@ -169,5 +173,21 @@ public class GameSession{
             currentTurn.sendMessage("10s exceeded, you are timed out, closing connection");
             currentTurn.close(); // disconnect the current player
         }
+    }
+
+    protected void setCurrentTurn(ClientHandler player) {
+        this.currentTurn = player;
+    }
+
+    protected ClientHandler getCurrentTurn() {
+        return currentTurn;
+    }
+
+    protected Board getBoard() {
+        return board;
+    }
+
+    protected void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 }
